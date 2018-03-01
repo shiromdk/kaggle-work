@@ -16,7 +16,7 @@ from threading import Thread
 import imutils
 import matplotlib.pyplot as plt
 
-model = keras.models.load_model('model.h5')
+model = keras.models.load_model('model2.h5')
 
 
 
