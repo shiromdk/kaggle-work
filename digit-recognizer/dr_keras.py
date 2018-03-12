@@ -1,3 +1,4 @@
+
 from keras.utils import to_categorical
 import numpy as np
 import pandas as pd
@@ -11,25 +12,22 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ReduceLROnPlateau
 from keras.layers.normalization import BatchNormalization
 
-
-train = pd.read_csv('fashion-mnist_train.csv')
-test = pd.read_csv('fashion-mnist_test.csv')
+train = pd.read_csv('train.csv')
+test = pd.read_csv('test.csv')
 
 Y_train = train["label"]
 X_train = train.drop(labels = ["label"], axis = 1)
 
-#Normalising the data
 X_train = X_train / 255.0
 test = test/255.0
 
 X_train = X_train.values.reshape(-1,28,28,1)
-#test = test.values.reshape(-1,28,28,1)
-
+test = test.values.reshape(-1,28,28,1)
 Y_train = to_categorical(Y_train, num_classes = 10)
-
 random_seed = 2
 
 X_train, X_val, Y_train, Y_val = train_test_split(X_train, Y_train, test_size = 0.1, random_state=random_seed)
+
 
 model = Sequential()
 
@@ -46,12 +44,14 @@ model.add(MaxPool2D(pool_size=(2,2), strides=(2,2)))
 model.add(Dropout(0.25))
 
 
+
 model.add(Flatten())
 model.add(Dense(256, activation = "relu"))
 model.add(Dropout(0.5))
 model.add(Dense(10, activation = "softmax"))
 
 optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
+
 model.compile(optimizer = optimizer , loss = "categorical_crossentropy", metrics=["accuracy"])
 
 learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc', 
@@ -59,7 +59,8 @@ learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc',
                                             verbose=1, 
                                             factor=0.5, 
                                             min_lr=0.00001)
-epochs = 10 # Turn epochs to 30 to get 0.9967 accuracy
+
+epochs = 25 # 
 batch_size = 75
 
 datagen = ImageDataGenerator(
@@ -83,7 +84,6 @@ history = model.fit_generator(datagen.flow(X_train,Y_train, batch_size=batch_siz
                               verbose = 1, steps_per_epoch=X_train.shape[0] // batch_size
                               , callbacks=[learning_rate_reduction]) 
 
-# predict results
 results = model.predict(test)
 
 # select the indix with the maximum probability
@@ -93,4 +93,3 @@ results = pd.Series(results,name="Label")
 submission = pd.concat([pd.Series(range(1,28001),name = "ImageId"),results],axis = 1)
 
 submission.to_csv("cnn_mnist_datagen.csv",index=False)
-model.save('digit_model.h5')
